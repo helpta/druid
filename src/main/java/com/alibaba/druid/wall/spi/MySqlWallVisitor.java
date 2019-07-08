@@ -387,6 +387,7 @@ public class MySqlWallVisitor extends MySqlASTVisitorAdapter implements WallVisi
         return !this.provider.checkDenyTable(name);
     }
 
+	@Override
     public void preVisit(SQLObject x) {
         WallVisitorUtils.preVisitCheck(this, x);
     }

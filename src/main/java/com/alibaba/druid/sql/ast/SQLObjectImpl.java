@@ -30,6 +30,7 @@ public abstract class SQLObjectImpl implements SQLObject {
     public SQLObjectImpl(){
     }
 
+	@Override
     public final void accept(SQLASTVisitor visitor) {
         if (visitor == null) {
             throw new IllegalArgumentException();
@@ -108,6 +109,7 @@ public abstract class SQLObjectImpl implements SQLObject {
         return attributes;
     }
     
+	@Override
     @SuppressWarnings("unchecked")
     public void addBeforeComment(String comment) {
         if (comment == null) {
@@ -192,6 +194,7 @@ public abstract class SQLObjectImpl implements SQLObject {
         return (List<String>) attributes.get("format.after_comment");
     }
     
+	@Override
     public boolean hasBeforeComment() {
         if (attributes == null) {
             return false;

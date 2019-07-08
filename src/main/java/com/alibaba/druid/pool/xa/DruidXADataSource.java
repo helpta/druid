@@ -51,6 +51,7 @@ public class DruidXADataSource extends DruidDataSource implements XADataSource {
         return new DruidPooledXAConnection(conn, rawXAConnection);
     }
 
+	@Override
     protected void initCheck() throws SQLException {
         super.initCheck();
 

@@ -242,6 +242,7 @@ public class MySqlOutputVisitor extends SQLASTOutputVisitor implements MySqlASTV
         return super.visit(select);
     }
 
+	@Override
     public boolean visit(MySqlSelectQueryBlock x) {
         final boolean bracket = x.isBracket();
         if (bracket) {

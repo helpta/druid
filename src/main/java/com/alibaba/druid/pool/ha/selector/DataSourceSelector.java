@@ -24,8 +24,30 @@ import javax.sql.DataSource;
  * @author DigitalSonic
  */
 public interface DataSourceSelector {
+	/**
+	 * 选取一个数据源
+	 * 
+	 * @return 返回被选取的数据源
+	 */
     DataSource get();
+
+	/**
+	 * 设置指定的数据源名称（目前主要再‘按名称’选择策略中）
+	 * 
+	 * @param name
+	 *            设置你想选取的数据源的名称
+	 */
     void setTarget(String name);
-    String getName();
+
+	/**
+	 * 返回选举器的名称
+	 * 
+	 * @return 当前选举器的名称
+	 */
+	String getName();
+
+	/**
+	 * 用于选举器需要的初始化操作
+	 */
     void init();
 }
