@@ -1545,10 +1545,25 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
     protected volatile long transactionIdSeed = 60000L;
     protected volatile long metaDataIdSeed    = 80000L;
 
+    /**
+     * 数据库链接id更新
+     */
     final static AtomicLongFieldUpdater<DruidAbstractDataSource> connectionIdSeedUpdater  = AtomicLongFieldUpdater.newUpdater(DruidAbstractDataSource.class, "connectionIdSeed");
+    /**
+     * 待执行语句id更新
+     */
     final static AtomicLongFieldUpdater<DruidAbstractDataSource> statementIdSeedUpdater   = AtomicLongFieldUpdater.newUpdater(DruidAbstractDataSource.class, "statementIdSeed");
+    /**
+     * 结果集id更新
+     */
     final static AtomicLongFieldUpdater<DruidAbstractDataSource> resultSetIdSeedUpdater   = AtomicLongFieldUpdater.newUpdater(DruidAbstractDataSource.class, "resultSetIdSeed");
+    /**
+     * 事务id更新
+     */
     final static AtomicLongFieldUpdater<DruidAbstractDataSource> transactionIdSeedUpdater = AtomicLongFieldUpdater.newUpdater(DruidAbstractDataSource.class, "transactionIdSeed");
+    /**
+     * metaDataId更新
+     */
     final static AtomicLongFieldUpdater<DruidAbstractDataSource> metaDataIdSeedUpdater    = AtomicLongFieldUpdater.newUpdater(DruidAbstractDataSource.class, "metaDataIdSeed");
 
     public long createConnectionId() {

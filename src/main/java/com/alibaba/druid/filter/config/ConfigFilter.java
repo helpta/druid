@@ -105,6 +105,7 @@ public class ConfigFilter extends FilterAdapter {
     public ConfigFilter(){
     }
 
+    @Override
     public void init(DataSourceProxy dataSourceProxy) {
         if (!(dataSourceProxy instanceof DruidDataSource)) {
             LOG.error("ConfigLoader only support DruidDataSource");

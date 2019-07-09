@@ -23,6 +23,7 @@ public class DruidDataSourceFactory implements com.ibatis.sqlmap.engine.datasour
 
     private DataSource dataSource;
 
+    @Override
     @SuppressWarnings("rawtypes")
     public void initialize(Map map) {
         try {
@@ -34,6 +35,7 @@ public class DruidDataSourceFactory implements com.ibatis.sqlmap.engine.datasour
         }
     }
 
+    @Override
     public DataSource getDataSource() {
         return dataSource;
     }

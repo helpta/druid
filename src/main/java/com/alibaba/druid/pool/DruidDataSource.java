@@ -15,8 +15,6 @@
  */
 package com.alibaba.druid.pool;
 
-import static com.alibaba.druid.util.Utils.getBoolean;
-
 import java.io.Closeable;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -101,6 +99,8 @@ import com.alibaba.druid.util.StringUtils;
 import com.alibaba.druid.util.Utils;
 import com.alibaba.druid.wall.WallFilter;
 import com.alibaba.druid.wall.WallProviderStatValue;
+
+import static com.alibaba.druid.util.Utils.getBoolean;
 
 /**
  * @author ljw [ljw2083@alibaba-inc.com]
@@ -791,12 +791,19 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
         this.connectProperties = properties;
     }
 
+    /**
+     * 数据源的初始化入口
+     *
+     * @throws SQLException
+     */
     public void init() throws SQLException {
+//        成员变量，如果已经初始化，直接return
         if (inited) {
             return;
         }
 
         // bug fixed for dead lock, for issue #2980
+//        这里主要是初始化这个类，利用静态方法注册自己的驱动类
         DruidDriver.getInstance();
 
         final ReentrantLock lock = this.lock;
@@ -808,13 +815,17 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
 
         boolean init = false;
         try {
+//            双重检查用于更安全
             if (inited) {
                 return;
             }
 
+//            调用栈信息
             initStackTrace = Utils.toString(Thread.currentThread().getStackTrace());
 
+//            内存级别的id原子加1
             this.id = DruidDriver.createDataSourceId();
+//            如果不是第一个数据源，则它下面的几个属性做内存指令级别的直接更新，跨度10万个
             if (this.id > 1) {
                 long delta = (this.id - 1) * 100000;
                 this.connectionIdSeedUpdater.addAndGet(this, delta);
@@ -828,6 +839,9 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 initFromWrapDriverUrl();
             }
 
+            /**
+             * 通过filter去装饰datasource，比如configFilter（去解密秘钥、设置其他属性）
+             */
             for (Filter filter : filters) {
                 filter.init(this);
             }
@@ -929,6 +943,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 // init connections
                 while (poolingCount < initialSize) {
                     try {
+//                        创建物理连接，里面会调用driver的连接方法，然后就会静态缓存datasource信息，供其他地方使用
                         PhysicalConnectionInfo pyConnectInfo = createPhysicalConnection();
                         DruidConnectionHolder holder = new DruidConnectionHolder(this, pyConnectInfo);
                         connections[poolingCount++] = holder;
