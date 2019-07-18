@@ -156,6 +156,7 @@ public class StatViewServlet extends ResourceServlet {
      * @param url 要连接的服务地址
      * @return 调用服务后返回的json字符串
      */
+    @Override
     protected String process(String url) {
         String resp = null;
         if (jmxUrl == null) {

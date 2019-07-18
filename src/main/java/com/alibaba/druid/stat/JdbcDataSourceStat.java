@@ -142,6 +142,7 @@ public class JdbcDataSourceStat implements JdbcDataSourceStatMBean {
 
         sqlStatMap = new LinkedHashMap<String, JdbcSqlStat>(16, 0.75f, false) {
 
+            @Override
             protected boolean removeEldestEntry(Map.Entry<String, JdbcSqlStat> eldest) {
                 boolean remove = (size() > maxSqlSize);
 

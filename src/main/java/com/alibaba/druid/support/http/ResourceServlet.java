@@ -182,6 +182,7 @@ public abstract class ResourceServlet extends HttpServlet {
         response.getWriter().write(text);
     }
 
+    @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String contextPath = request.getContextPath();
         String servletPath = request.getServletPath();

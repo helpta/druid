@@ -116,10 +116,11 @@ public class ConfigFilter extends FilterAdapter {
 
         Properties configFileProperties = loadPropertyFromConfigFile(connectionProperties);
 
-        // 判断是否需要解密，如果需要就进行解密行动
+        // 是否需要解密
         boolean decrypt = isDecrypt(connectionProperties, configFileProperties);
 
         if (configFileProperties == null) {
+//            如果需要就进行解密行动
             if (decrypt) {
                 decrypt(dataSource, null);
             }

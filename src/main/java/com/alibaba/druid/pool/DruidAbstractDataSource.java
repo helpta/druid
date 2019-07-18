@@ -1607,9 +1607,11 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
 
     public Connection createPhysicalConnection(String url, Properties info) throws SQLException {
         Connection conn;
+//        如果没有filter直接创建使用driver创建链接
         if (getProxyFilters().size() == 0) {
             conn = getDriver().connect(url, info);
         } else {
+//            出发filter的创建链接的自定义逻辑
             conn = new FilterChainImpl(this).connection_connect(info);
         }
 
@@ -1680,10 +1682,10 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
             if (conn == null) {
                 throw new SQLException("connect error, url " + url + ", driverClass " + this.driverClass);
             }
-
+//          设置默认的是否自动提交、隔离级别，并且执行默认的初始化sql，如果想接受变量和全局变量，可以传入这两个参数，会做查询
             initPhysicalConnection(conn, variables, globalVariables);
             initedNanos = System.nanoTime();
-
+//          使用链接有效器校验是否有效
             validateConnection(conn);
             validatedNanos = System.nanoTime();
 

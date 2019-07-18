@@ -27,6 +27,7 @@ public class FailFastTest extends PoolTestCase {
         super.setUp();
 
         dataSource = new DruidDataSource() {
+            @Override
             public PhysicalConnectionInfo createPhysicalConnection() throws SQLException {
                 if (index.get() > 2) {
                     return super.createPhysicalConnection();

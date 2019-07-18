@@ -808,6 +808,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
 
         final ReentrantLock lock = this.lock;
         try {
+//            尝试拿锁
             lock.lockInterruptibly();
         } catch (InterruptedException e) {
             throw new SQLException("interrupt", e);
@@ -815,7 +816,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
 
         boolean init = false;
         try {
-//            双重检查用于更安全
+//            双重检查用于更安全（常用于同步后，再做层检查）
             if (inited) {
                 return;
             }
@@ -836,11 +837,12 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
 
             if (this.jdbcUrl != null) {
                 this.jdbcUrl = this.jdbcUrl.trim();
+//                如果是druid自定义包装的jdbcurl做解析
                 initFromWrapDriverUrl();
             }
 
             /**
-             * 通过filter去装饰datasource，比如configFilter（去解密秘钥、设置其他属性）
+             * 通过filter(通过datasource的property参数注入)去装饰datasource,每个filter关注的功能不同，比如configFilter（去解密秘钥、设置其他属性）
              */
             for (Filter filter : filters) {
                 filter.init(this);
@@ -888,8 +890,10 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 this.driverClass = driverClass.trim();
             }
 
+            //初始化spi的fitler
             initFromSPIServiceLoader();
 
+//            如果没有直接设置，会从url中识别出dbType，然后返回定义好的DriverClassName
             if (this.driver == null) {
                 if (this.driverClass == null || this.driverClass.isEmpty()) {
                     this.driverClass = JdbcUtils.getDriverClassName(this.jdbcUrl);
@@ -901,6 +905,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                     if (jdbcUrl == null && (driverClass == null || driverClass.length() == 0)) {
                         throw new SQLException("url not set");
                     }
+//                    加载真实驱动
                     driver = JdbcUtils.createDriver(driverClassLoader, driverClass);
                 }
             } else {
@@ -909,13 +914,18 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 }
             }
 
+//            一些基本的简单检查，比如oracle某些版本不支持等
             initCheck();
-
+//          根据驱动类型，初始化异常的排序器，在 pool-ventor包下，主要是用来判断异常的严重性
             initExceptionSorter();
+//          初始化链接的检查器，同上ExceptionSorter同一包下，用于检查链接是否正常
             initValidConnectionChecker();
+//            检查校验链接是否有效的sql语句是否设定。
             validationQueryCheck();
 
+
             if (isUseGlobalDataSourceStat()) {
+//                使用全局的数据源统计
                 dataSourceStat = JdbcDataSourceStat.getGlobal();
                 if (dataSourceStat == null) {
                     dataSourceStat = new JdbcDataSourceStat("Global", "Global", this.dbType);
@@ -925,21 +935,29 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                     dataSourceStat.setDbType(this.dbType);
                 }
             } else {
+//                不使用全局数据源统计，新建
                 dataSourceStat = new JdbcDataSourceStat(this.name, this.jdbcUrl, this.dbType, this.connectProperties);
             }
+//            设置数据源统计是否支持重置，可以追下代码，发现是servlet调用过来进行reset。
             dataSourceStat.setResetStatEnable(this.resetStatEnable);
 
+//            链接持有者 数组
             connections = new DruidConnectionHolder[maxActive];
+//            被驱逐链接持有者 数组
             evictConnections = new DruidConnectionHolder[maxActive];
+//            保活链接持有者 数组
             keepAliveConnections = new DruidConnectionHolder[maxActive];
 
             SQLException connectError = null;
 
+//             创建指定的初始化个数的链接，并与holder绑定
             if (createScheduler != null && asyncInit) {
+//               如果是异步创建
                 for (int i = 0; i < initialSize; ++i) {
                     submitCreateTask(true);
                 }
             } else if (!asyncInit) {
+//                同步创建
                 // init connections
                 while (poolingCount < initialSize) {
                     try {
@@ -964,14 +982,19 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 }
             }
 
+//            创建数据源打印统计信息的线程并启动开始打印
             createAndLogThread();
+//          创建并启动链接的创建线程（异步并且没有调度线程池的时候使用，不会走上面两种判断的初始化）
             createAndStartCreatorThread();
+//            用于检查最大生命周期、驱逐链接、最大超时时间等配置，用于剔除或者标记链接
             createAndStartDestroyThread();
 
+//            保证前面两个线程的创建
             initedLatch.await();
             init = true;
 
             initedTime = new Date();
+//            注册Mbean，用于对外提供监控等功能，可参考（https://blog.csdn.net/u013256816/article/details/52800742）
             registerMbean();
 
             if (connectError != null && poolingCount == 0) {
@@ -1020,6 +1043,12 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
         }
     }
 
+
+    /**
+     * 提交创建任务
+     *
+     * @param initTask 是否是初始化的任务
+     */
     private void submitCreateTask(boolean initTask) {
         createTaskCount++;
         CreateConnectionTask task = new CreateConnectionTask(initTask);
@@ -1042,6 +1071,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             createTasks = array;
         }
 
+//        提交任务
         this.createSchedulerFuture = createScheduler.submit(task);
     }
 
@@ -2420,7 +2450,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             LOG.error("create connection holder error", ex);
             return false;
         }
-
+//             物理链接跟holder绑定
         return put(holder, physicalConnectionInfo.createTaskId);
     }
 
@@ -2481,6 +2511,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 // addLast
                 lock.lock();
                 try {
+//                    数据源是否已关闭或者正在关闭
                     if (closed || closing) {
                         clearCreateTask(taskId);
                         return;
@@ -2516,6 +2547,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 PhysicalConnectionInfo physicalConnection = null;
 
                 try {
+//                    创建物理链接，并把结果包装起来
                     physicalConnection = createPhysicalConnection();
                 } catch (OutOfMemoryError e) {
                     LOG.error("create connection OutOfMemoryError, out memory. ", e);
@@ -2630,6 +2662,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 }
 
                 physicalConnection.createTaskId = taskId;
+//               物理链接跟holder绑定
                 boolean result = put(physicalConnection);
                 if (!result) {
                     JdbcUtils.close(physicalConnection.getPhysicalConnection());
